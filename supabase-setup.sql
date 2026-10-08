@@ -4,6 +4,7 @@ create table if not exists public.check_ins (
   mood text not null check (mood in ('good', 'bad', 'neutral')),
   rating smallint check (rating between 1 and 5),
   answer text not null,
+  word_of_day text check (word_of_day in ('Ben', 'Yers', 'Noew', 'Beso', 'Poppo', 'Sternie', 'Eyes')),
   message text not null default '',
   poppo_count integer not null default 0 check (poppo_count >= 0),
   created_at timestamptz not null default now()
@@ -14,6 +15,16 @@ alter table public.check_ins
 
 alter table public.check_ins
   add column if not exists rating smallint check (rating between 1 and 5);
+
+alter table public.check_ins
+  add column if not exists word_of_day text;
+
+alter table public.check_ins
+  drop constraint if exists check_ins_word_of_day_check;
+
+alter table public.check_ins
+  add constraint check_ins_word_of_day_check
+  check (word_of_day is null or word_of_day in ('Ben', 'Yers', 'Noew', 'Beso', 'Poppo', 'Sternie', 'Eyes'));
 
 alter table public.check_ins
   add column if not exists poppo_count integer not null default 0 check (poppo_count >= 0);

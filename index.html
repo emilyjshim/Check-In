@@ -81,6 +81,14 @@
         box-shadow: 0 12px 36px rgba(38, 75, 49, 0.08);
       }
 
+      #evan-note {
+        display: none;
+        margin: -14px 0 20px;
+        color: var(--accent-dark);
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+
       #person-choice > p,
       #mood-options legend {
         margin: 0 0 16px;
@@ -138,6 +146,54 @@
         padding: 0;
       }
 
+      #word-step {
+        display: none;
+      }
+
+      #word-step fieldset {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+        gap: 10px;
+        margin: 0 0 20px;
+        padding: 0;
+        border: 0;
+      }
+
+      #word-step legend {
+        grid-column: 1 / -1;
+        width: 100%;
+        margin: 0 0 14px;
+        color: var(--ink);
+        font-size: 1.12rem;
+        font-weight: 650;
+      }
+
+      .word-option {
+        position: relative;
+        display: grid;
+        min-height: 46px;
+        place-items: center;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #fbfcf8;
+        color: var(--ink);
+        font-weight: 650;
+        cursor: pointer;
+      }
+
+      .word-option:has(input:checked) {
+        border-color: var(--accent);
+        background: var(--soft);
+        color: var(--accent-dark);
+      }
+
+      .word-option input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+      }
+
       #mood-options legend {
         width: 100%;
       }
@@ -186,6 +242,10 @@
 
       #follow-up {
         text-align: left;
+      }
+
+      #message-step {
+        display: none;
       }
 
       #follow-up label {
@@ -319,9 +379,9 @@
   <body>
     <main>
       <header>
-        <p class="eyebrow">A little moment for you</p>
-        <h1>Daily check-in</h1>
+        <h1>Hellooew!</h1>
         <p>Tell me how your day has been.</p>
+        <p id="evan-note" aria-live="polite"></p>
       </header>
 
       <section id="person-choice">
@@ -346,16 +406,36 @@
       </div>
       <p id="response" aria-live="polite"></p>
       <div id="follow-up">
-        <label id="follow-up-question" for="day-input"></label>
-        <textarea id="day-input" placeholder="Type your answer here"></textarea>
-        <label id="message-question" for="message-input"></label>
-        <textarea id="message-input" placeholder="Write a little message (optional)"></textarea>
-        <div class="poppo-controls">
-          <p id="poppo-instruction"></p>
-          <button id="poppo-button" type="button" onclick="sendPoppo()">Poppo 💚</button>
-          <p id="poppo-status" aria-live="polite"></p>
+        <div id="description-step">
+          <label id="follow-up-question" for="day-input"></label>
+          <textarea id="day-input" placeholder="Type your answer here"></textarea>
+          <button id="description-submit-button" type="button" onclick="continueToWord()">
+            Submit day description
+          </button>
         </div>
-        <button id="submit-button" onclick="submitAnswer()">Submit check-in</button>
+        <div id="word-step">
+          <fieldset>
+            <legend>Which do you resonate most with today?</legend>
+            <label class="word-option"><input type="radio" name="word-of-day" value="Ben">Ben</label>
+            <label class="word-option"><input type="radio" name="word-of-day" value="Yers">Yers</label>
+            <label class="word-option"><input type="radio" name="word-of-day" value="Noew">Noew</label>
+            <label class="word-option"><input type="radio" name="word-of-day" value="Beso">Beso</label>
+            <label class="word-option"><input type="radio" name="word-of-day" value="Poppo">Poppo</label>
+            <label class="word-option"><input type="radio" name="word-of-day" value="Sternie">Sternie</label>
+            <label class="word-option"><input type="radio" name="word-of-day" value="Eyes">Eyes</label>
+          </fieldset>
+          <button type="button" onclick="continueToMessage()">Continue</button>
+        </div>
+        <div id="message-step">
+          <label id="message-question" for="message-input"></label>
+          <textarea id="message-input" placeholder="Write a little message (optional)"></textarea>
+          <div class="poppo-controls">
+            <p id="poppo-instruction"></p>
+            <button id="poppo-button" type="button" onclick="sendPoppo()">Poppo 💚</button>
+            <p id="poppo-status" aria-live="polite"></p>
+          </div>
+          <button id="submit-button" onclick="submitAnswer()">Submit check-in</button>
+        </div>
         <p id="thank-you" aria-live="polite"></p>
       </div>
       <section id="other-check-in" aria-live="polite">
@@ -384,6 +464,8 @@
       let currentPerson = "";
       let currentMood = "";
       let currentRating = 0;
+      let currentAnswer = "";
+      let currentWordOfDay = "";
       let poppoCount = 0;
       let otherCheckInExpiryTimer = null;
 
@@ -406,6 +488,24 @@
       function choosePerson(person) {
         currentPerson = person;
         clearOtherCheckInExpiryTimer();
+        const evanNote = document.getElementById("evan-note");
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const scheduleStart = new Date(2026, 9, 8);
+        const scheduleEnd = new Date(2026, 10, 1);
+
+        evanNote.style.display = "none";
+        evanNote.textContent = "";
+        if (person === "Evan" && today >= scheduleStart && today <= scheduleEnd) {
+          if (now.getDay() === 3 || now.getDay() === 6) {
+            evanNote.textContent =
+              "Emily wishes you luck at your game... She is always proud of you.";
+          } else {
+            const practiceTense = now.getHours() < 12 ? "have" : "had";
+            evanNote.textContent = "Emily hopes you " + practiceTense + " a good practice!";
+          }
+          evanNote.style.display = "block";
+        }
         document.getElementById("selected-person").textContent =
           "Filling out the check-in as " + person + ".";
         document.getElementById("start-button").style.display = "inline-block";
@@ -418,6 +518,8 @@
 
       function showMoodOptions() {
         clearOtherCheckInExpiryTimer();
+        currentAnswer = "";
+        currentWordOfDay = "";
         document.querySelectorAll('input[name="mood-rating"]').forEach((input) => {
           input.checked = false;
         });
@@ -430,6 +532,8 @@
       function showResponse(ratingValue) {
         clearOtherCheckInExpiryTimer();
         currentRating = Number(ratingValue);
+        currentAnswer = "";
+        currentWordOfDay = "";
         currentMood = currentRating <= 2 ? "bad" : currentRating >= 4 ? "good" : "neutral";
         const response = document.getElementById("response");
         const question = document.getElementById("follow-up-question");
@@ -449,14 +553,50 @@
         document.getElementById("message-question").textContent =
           "Message for " + (currentPerson === "Emily" ? "Evan" : "Emily") + " (optional):";
         poppoCount = 0;
-        document.getElementById("poppo-instruction").textContent = "Send 0 Poppo";
+        document.getElementById("poppo-instruction").textContent = "Tap to send a Poppo";
         document.getElementById("poppo-status").textContent = "";
         response.style.display = "block";
         document.getElementById("follow-up").style.display = "block";
         document.getElementById("day-input").value = "";
         document.getElementById("message-input").value = "";
+        document.getElementById("description-step").style.display = "block";
+        document.getElementById("word-step").style.display = "none";
+        document.getElementById("message-step").style.display = "none";
+        document.querySelectorAll('input[name="word-of-day"]').forEach((input) => {
+          input.checked = false;
+        });
         document.getElementById("other-check-in").style.display = "none";
         thankYou.textContent = "";
+      }
+
+      function continueToWord() {
+        const answer = document.getElementById("day-input").value.trim();
+        const thankYou = document.getElementById("thank-you");
+
+        if (!answer) {
+          thankYou.textContent = "Please describe your day before continuing.";
+          return;
+        }
+
+        currentAnswer = answer;
+        thankYou.textContent = "";
+        document.getElementById("description-step").style.display = "none";
+        document.getElementById("word-step").style.display = "block";
+      }
+
+      function continueToMessage() {
+        const selectedWord = document.querySelector('input[name="word-of-day"]:checked');
+        const thankYou = document.getElementById("thank-you");
+
+        if (!selectedWord) {
+          thankYou.textContent = "Please choose the word you resonate with today.";
+          return;
+        }
+
+        currentWordOfDay = selectedWord.value;
+        thankYou.textContent = "";
+        document.getElementById("word-step").style.display = "none";
+        document.getElementById("message-step").style.display = "block";
       }
 
       function sendPoppo() {
@@ -467,13 +607,12 @@
       }
 
       async function submitAnswer() {
-        const answer = document.getElementById("day-input").value.trim();
         const message = document.getElementById("message-input").value.trim();
         const thankYou = document.getElementById("thank-you");
         const submitButton = document.getElementById("submit-button");
 
-        if (!answer) {
-          thankYou.textContent = "Please type an answer before submitting.";
+        if (!currentAnswer) {
+          thankYou.textContent = "Please submit your day description first.";
           return;
         }
 
@@ -498,7 +637,8 @@
               person: currentPerson,
               mood: currentMood,
               rating: currentRating,
-              answer,
+              answer: currentAnswer,
+              word_of_day: currentWordOfDay,
               message,
               poppo_count: poppoCount
             });
@@ -526,7 +666,7 @@
         const otherPerson = currentPerson === "Emily" ? "Evan" : "Emily";
         const { data, error } = await supabaseClient
           .from("check_ins")
-          .select("person, mood, rating, answer, message, poppo_count, created_at")
+          .select("person, mood, rating, answer, word_of_day, message, poppo_count, created_at")
           .eq("person", otherPerson)
           .gte(
             "created_at",
@@ -564,6 +704,9 @@
           }
           if (data.poppo_count > 0) {
             messageLines.push(data.person + " sent you " + data.poppo_count + " Poppo!");
+          }
+          if (data.word_of_day) {
+            messageLines.push(data.person + "’s word of the day is: " + data.word_of_day);
           }
           document.getElementById("other-check-in-message").textContent =
             messageLines.length > 0 ? messageLines.join("\n") : "No extra message this time.";
