@@ -10,8 +10,8 @@ other person's check-in is visible for 12 hours after it was submitted.
 2. In the Supabase dashboard, open **SQL Editor**, create a query, paste in the
    contents of [supabase-setup.sql](./supabase-setup.sql), and run it. This
    creates the table and enables the public access needed by this demo. If you
-   already created the table, run the updated SQL again to apply the 12-hour
-   read policy.
+   already created the table, run the updated SQL again to add the message and
+   1-to-5 rating columns, allow neutral moods, and apply the 12-hour read policy.
 3. In the dashboard, open **Project Settings → API** (or **API Keys**) and copy
    the Project URL and the publishable key. The legacy `anon` key also works.
 4. In `index.html`, replace `YOUR_SUPABASE_PROJECT_URL` and
