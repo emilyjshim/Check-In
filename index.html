@@ -172,6 +172,14 @@
         text-align: center;
       }
 
+      #word-audio-status {
+        min-height: 1.4em;
+        margin: 0 0 14px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        text-align: center;
+      }
+
       #word-step .word-option {
         position: relative;
         display: flex;
@@ -304,28 +312,32 @@
         font-size: 1.3rem;
       }
 
-      #other-check-in p {
-        margin: 10px 0;
-        line-height: 1.6;
-        overflow-wrap: anywhere;
-      }
-
-      #other-check-in-mood {
-        display: inline-block;
-        padding: 6px 11px;
-        border-radius: 999px;
-        background: var(--soft);
-        color: var(--accent-dark);
-        font-weight: 700;
-      }
-
-      #other-check-in-word {
-        padding: 13px 16px;
+      .answer-card {
+        margin: 12px 0;
+        padding: 14px 16px;
         border: 1px solid var(--border);
         border-radius: 12px;
         background: #f6f9f3;
+      }
+
+      .answer-card[hidden] {
+        display: none;
+      }
+
+      .answer-label {
+        margin-bottom: 5px;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .answer-card p {
+        margin: 0;
         color: var(--ink);
-        text-align: center;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
       }
 
       #selected-word-summary {
@@ -339,18 +351,19 @@
         text-align: center;
       }
 
-      #other-check-in-message {
-        margin-top: 16px;
-        padding: 14px 16px;
+      #other-check-in-message-card {
         border-left: 3px solid #78a47f;
-        border-radius: 0 12px 12px 0;
         background: #f3f7ef;
+      }
+
+      #other-check-in-message {
         white-space: pre-line;
       }
 
       #other-check-in-date {
         margin-top: 18px;
         font-size: 0.86rem;
+        text-align: center;
       }
 
       .poppo-controls {
@@ -447,14 +460,15 @@
         <div id="word-step">
           <fieldset>
             <legend>Which do you resonate most with today?</legend>
-            <label class="word-option"><input type="radio" name="word-of-day" value="Ben">Ben</label>
-            <label class="word-option"><input type="radio" name="word-of-day" value="Yers">Yers</label>
-            <label class="word-option"><input type="radio" name="word-of-day" value="Noew">Noew</label>
+            <label class="word-option"><input type="radio" name="word-of-day" value="Ben" onchange="playWordAudio(this.value)">Ben</label>
+            <label class="word-option"><input type="radio" name="word-of-day" value="Yers" onchange="playWordAudio(this.value)">Yers</label>
+            <label class="word-option"><input type="radio" name="word-of-day" value="Noew" onchange="playWordAudio(this.value)">Noew</label>
             <label class="word-option"><input type="radio" name="word-of-day" value="Beso">Beso</label>
             <label class="word-option"><input type="radio" name="word-of-day" value="Poppo">Poppo</label>
             <label class="word-option"><input type="radio" name="word-of-day" value="Sternie">Sternie</label>
             <label class="word-option"><input type="radio" name="word-of-day" value="Eyes">Eyes</label>
           </fieldset>
+          <p id="word-audio-status" aria-live="polite"></p>
           <button type="button" onclick="continueToMessage()">Continue</button>
         </div>
         <div id="message-step">
@@ -472,10 +486,22 @@
       </div>
       <section id="other-check-in" aria-live="polite">
         <h2 id="other-check-in-heading"></h2>
-        <p id="other-check-in-mood"></p>
-        <p id="other-check-in-answer"></p>
-        <p id="other-check-in-word"></p>
-        <p id="other-check-in-message"></p>
+        <div id="other-check-in-mood-card" class="answer-card">
+          <div class="answer-label">Mood</div>
+          <p id="other-check-in-mood"></p>
+        </div>
+        <div id="other-check-in-answer-card" class="answer-card">
+          <div class="answer-label">How was your day?</div>
+          <p id="other-check-in-answer"></p>
+        </div>
+        <div id="other-check-in-word-card" class="answer-card">
+          <div class="answer-label">Word of the day</div>
+          <p id="other-check-in-word"></p>
+        </div>
+        <div id="other-check-in-message-card" class="answer-card">
+          <div class="answer-label">Message &amp; Poppo</div>
+          <p id="other-check-in-message"></p>
+        </div>
         <p id="other-check-in-date"></p>
       </section>
     </main>
@@ -494,11 +520,21 @@
         ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
         : null;
       const CHECK_IN_VISIBILITY_MS = 12 * 60 * 60 * 1000;
+      const wordAudio = {
+        Ben: new Audio("audio/yers.mp3"),
+        Yers: new Audio("audio/ben.mp3"),
+        Noew: new Audio("audio/noew.mp3"),
+        Beso: new Audio("audio/beso.mp3"),
+        Poppo: new Audio("audio/poppo.mp3"),
+        Sternie: new Audio("audio/sternie.mp3"),
+        Eyes: new Audio("audio/eyes.mp3")
+      };
       let currentPerson = "";
       let currentMood = "";
       let currentRating = 0;
       let currentAnswer = "";
       let currentWordOfDay = "";
+      let currentAudio = null;
       let poppoCount = 0;
       let otherCheckInExpiryTimer = null;
 
@@ -510,11 +546,15 @@
       }
 
       function hideExpiredOtherCheckIn() {
+        document.getElementById("other-check-in-mood-card").hidden = false;
         document.getElementById("other-check-in-mood").textContent =
           "No check-in from them in the past 12 hours.";
         document.getElementById("other-check-in-answer").textContent = "";
+        document.getElementById("other-check-in-answer-card").hidden = true;
         document.getElementById("other-check-in-word").textContent = "";
+        document.getElementById("other-check-in-word-card").hidden = true;
         document.getElementById("other-check-in-message").textContent = "";
+        document.getElementById("other-check-in-message-card").hidden = true;
         document.getElementById("other-check-in-date").textContent = "";
         otherCheckInExpiryTimer = null;
       }
@@ -616,6 +656,32 @@
         thankYou.textContent = "";
         document.getElementById("description-step").style.display = "none";
         document.getElementById("word-step").style.display = "block";
+      }
+
+      function playWordAudio(word) {
+        const audio = wordAudio[word];
+        const status = document.getElementById("word-audio-status");
+
+        status.textContent = "";
+        if (!audio) {
+          if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio = null;
+          }
+          return;
+        }
+
+        if (currentAudio && currentAudio !== audio) {
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+        }
+
+        currentAudio = audio;
+        audio.currentTime = 0;
+        audio.play().catch(() => {
+          status.textContent = "Couldn't play that audio. Check the MP3 file and try again.";
+        });
       }
 
       function continueToMessage() {
@@ -722,33 +788,38 @@
           otherPerson + "’s latest check-in";
 
         if (!data) {
+          document.getElementById("other-check-in-mood-card").hidden = false;
           document.getElementById("other-check-in-mood").textContent =
             "No check-in from them in the past 12 hours.";
           document.getElementById("other-check-in-answer").textContent = "";
+          document.getElementById("other-check-in-answer-card").hidden = true;
           document.getElementById("other-check-in-word").textContent = "";
+          document.getElementById("other-check-in-word-card").hidden = true;
           document.getElementById("other-check-in-message").textContent = "";
+          document.getElementById("other-check-in-message-card").hidden = true;
           document.getElementById("other-check-in-date").textContent = "";
         } else {
+          document.getElementById("other-check-in-mood-card").hidden = false;
           document.getElementById("other-check-in-mood").textContent =
             data.rating
-              ? "Mood: " + data.rating + " out of 5"
-              : "Mood: " + data.mood;
+              ? data.rating + " out of 5"
+              : data.mood;
+          document.getElementById("other-check-in-answer-card").hidden = false;
           document.getElementById("other-check-in-answer").textContent =
-            "Answer: " + data.answer;
+            data.answer;
+          document.getElementById("other-check-in-word-card").hidden = false;
           document.getElementById("other-check-in-word").textContent =
-            "Which do you resonate most with today? " +
-            data.person +
-            "’s word of the day is: " +
-            (data.word_of_day || "No word was selected.");
+            data.word_of_day || "No word was selected.";
           const messageLines = [];
           if (data.message) {
-            messageLines.push("Message for you: " + data.message);
+            messageLines.push(data.message);
           }
           if (data.poppo_count > 0) {
             messageLines.push(data.person + " sent you " + data.poppo_count + " Poppo!");
           }
+          document.getElementById("other-check-in-message-card").hidden = false;
           document.getElementById("other-check-in-message").textContent =
-            messageLines.length > 0 ? messageLines.join("\n") : "No extra message this time.";
+            messageLines.length > 0 ? messageLines.join("\n") : "No message this time.";
           document.getElementById("other-check-in-date").textContent =
             "Submitted: " + new Date(data.created_at).toLocaleString();
           const expiresIn =
