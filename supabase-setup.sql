@@ -11,11 +11,12 @@ alter table public.check_ins enable row level security;
 grant select, insert on public.check_ins to anon;
 
 drop policy if exists "Anyone can read check-ins" on public.check_ins;
-create policy "Anyone can read check-ins"
+drop policy if exists "Anyone can read recent check-ins" on public.check_ins;
+create policy "Anyone can read recent check-ins"
   on public.check_ins
   for select
   to anon
-  using (true);
+  using (created_at >= now() - interval '12 hours');
 
 drop policy if exists "Anyone can submit check-ins" on public.check_ins;
 create policy "Anyone can submit check-ins"

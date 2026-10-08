@@ -87,16 +87,35 @@
       const SUPABASE_ANON_KEY = "sb_publishable_O06OF-pRhlmjYEVTfGg7pQ_rqfMxbuQ";
 
       const supabaseConfigured =
-        SUPABASE_URL !== "https://xbpngswyyjrdbonexfxy.supabase.co" &&
-        SUPABASE_ANON_KEY !== "sb_publishable_O06OF-pRhlmjYEVTfGg7pQ_rqfMxbuQ";
+        SUPABASE_URL.startsWith("https://") &&
+        !SUPABASE_URL.includes("YOUR_") &&
+        !SUPABASE_ANON_KEY.includes("YOUR_");
       const supabaseClient = supabaseConfigured && window.supabase
         ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
         : null;
+      const CHECK_IN_VISIBILITY_MS = 12 * 60 * 60 * 1000;
       let currentPerson = "";
       let currentMood = "";
+      let otherCheckInExpiryTimer = null;
+
+      function clearOtherCheckInExpiryTimer() {
+        if (otherCheckInExpiryTimer !== null) {
+          window.clearTimeout(otherCheckInExpiryTimer);
+          otherCheckInExpiryTimer = null;
+        }
+      }
+
+      function hideExpiredOtherCheckIn() {
+        document.getElementById("other-check-in-mood").textContent =
+          "No check-in from them in the past 12 hours.";
+        document.getElementById("other-check-in-answer").textContent = "";
+        document.getElementById("other-check-in-date").textContent = "";
+        otherCheckInExpiryTimer = null;
+      }
 
       function choosePerson(person) {
         currentPerson = person;
+        clearOtherCheckInExpiryTimer();
         document.getElementById("selected-person").textContent =
           "Filling out the check-in as " + person + ".";
         document.getElementById("start-button").style.display = "inline-block";
@@ -108,6 +127,7 @@
       }
 
       function showMoodOptions() {
+        clearOtherCheckInExpiryTimer();
         document.getElementById("mood-options").style.display = "block";
         document.getElementById("response").style.display = "none";
         document.getElementById("follow-up").style.display = "none";
@@ -115,6 +135,7 @@
       }
 
       function showResponse(mood) {
+        clearOtherCheckInExpiryTimer();
         currentMood = mood;
         const response = document.getElementById("response");
         const question = document.getElementById("follow-up-question");
@@ -189,6 +210,10 @@
           .from("check_ins")
           .select("person, mood, answer, created_at")
           .eq("person", otherPerson)
+          .gte(
+            "created_at",
+            new Date(Date.now() - CHECK_IN_VISIBILITY_MS).toISOString()
+          )
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -198,12 +223,13 @@
         }
 
         const section = document.getElementById("other-check-in");
+        clearOtherCheckInExpiryTimer();
         document.getElementById("other-check-in-heading").textContent =
           otherPerson + "’s latest check-in";
 
         if (!data) {
           document.getElementById("other-check-in-mood").textContent =
-            otherPerson + " has not submitted a check-in yet.";
+            "No check-in from them in the past 12 hours.";
           document.getElementById("other-check-in-answer").textContent = "";
           document.getElementById("other-check-in-date").textContent = "";
         } else {
@@ -213,6 +239,12 @@
             "Answer: " + data.answer;
           document.getElementById("other-check-in-date").textContent =
             "Submitted: " + new Date(data.created_at).toLocaleString();
+          const expiresIn =
+            new Date(data.created_at).getTime() + CHECK_IN_VISIBILITY_MS - Date.now();
+          otherCheckInExpiryTimer = window.setTimeout(
+            hideExpiredOtherCheckIn,
+            Math.max(0, expiresIn)
+          );
         }
 
         section.style.display = "block";
