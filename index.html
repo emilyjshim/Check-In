@@ -1,10 +1,222 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My GitHub Website</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        text-align: center;
+        padding: 50px;
+      }
+      h1 {
+        color: #333;
+      }
+      p,
+      label {
+        color: #666;
+      }
+      button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:disabled {
+        cursor: wait;
+        opacity: 0.7;
+      }
+      #start-button,
+      #mood-options,
+      #response,
+      #follow-up,
+      #other-check-in {
+        display: none;
+      }
+      textarea {
+        display: block;
+        width: 100%;
+        max-width: 400px;
+        min-height: 80px;
+        margin: 10px auto;
+        padding: 10px;
+        box-sizing: border-box;
+      }
+    </style>
   </head>
   <body>
-    <h1>Hello, World!</h1>
-    <p>Welcome to my brand new website hosted on GitHub Pages.</p>
+    <h1>Welcome to the check-in!</h1>
+    <p>Tell me how your day has been.</p>
+
+    <section id="person-choice">
+      <p>Who is filling out the check-in?</p>
+      <button onclick="choosePerson('Emily')">Emily</button>
+      <button onclick="choosePerson('Evan')">Evan</button>
+    </section>
+
+    <p id="selected-person" aria-live="polite"></p>
+    <button id="start-button" onclick="showMoodOptions()">Start check-in</button>
+    <div id="mood-options">
+      <p>How is your mood today?</p>
+      <button onclick="showResponse('good')">Good</button>
+      <button onclick="showResponse('bad')">Bad</button>
+    </div>
+    <p id="response" aria-live="polite"></p>
+    <div id="follow-up">
+      <label id="follow-up-question" for="day-input"></label>
+      <textarea id="day-input" placeholder="Type your answer here"></textarea>
+      <button id="submit-button" onclick="submitAnswer()">Submit</button>
+      <p id="thank-you" aria-live="polite"></p>
+    </div>
+    <section id="other-check-in" aria-live="polite">
+      <h2 id="other-check-in-heading"></h2>
+      <p id="other-check-in-mood"></p>
+      <p id="other-check-in-answer"></p>
+      <p id="other-check-in-date"></p>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      // Replace these with the Project URL and publishable/anon key from your Supabase project.
+      const SUPABASE_URL = "https://xbpngswyyjrdbonexfxy.supabase.co";
+      const SUPABASE_ANON_KEY = "sb_publishable_O06OF-pRhlmjYEVTfGg7pQ_rqfMxbuQ";
+
+      const supabaseConfigured =
+        SUPABASE_URL !== "https://xbpngswyyjrdbonexfxy.supabase.co" &&
+        SUPABASE_ANON_KEY !== "sb_publishable_O06OF-pRhlmjYEVTfGg7pQ_rqfMxbuQ";
+      const supabaseClient = supabaseConfigured && window.supabase
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        : null;
+      let currentPerson = "";
+      let currentMood = "";
+
+      function choosePerson(person) {
+        currentPerson = person;
+        document.getElementById("selected-person").textContent =
+          "Filling out the check-in as " + person + ".";
+        document.getElementById("start-button").style.display = "inline-block";
+        document.getElementById("mood-options").style.display = "none";
+        document.getElementById("response").style.display = "none";
+        document.getElementById("follow-up").style.display = "none";
+        document.getElementById("other-check-in").style.display = "none";
+        document.getElementById("thank-you").textContent = "";
+      }
+
+      function showMoodOptions() {
+        document.getElementById("mood-options").style.display = "block";
+        document.getElementById("response").style.display = "none";
+        document.getElementById("follow-up").style.display = "none";
+        document.getElementById("other-check-in").style.display = "none";
+      }
+
+      function showResponse(mood) {
+        currentMood = mood;
+        const response = document.getElementById("response");
+        const question = document.getElementById("follow-up-question");
+        const thankYou = document.getElementById("thank-you");
+
+        if (mood === "good") {
+          response.textContent = "I’m glad you’re feeling good!";
+          question.textContent = "What made your day good today?";
+        } else {
+          response.textContent = "I’m sorry you’re feeling bad. I hope things get better soon!";
+          question.textContent = "Can you tell me what made your day bad?";
+        }
+
+        response.style.display = "block";
+        document.getElementById("follow-up").style.display = "block";
+        document.getElementById("day-input").value = "";
+        document.getElementById("other-check-in").style.display = "none";
+        thankYou.textContent = "";
+      }
+
+      async function submitAnswer() {
+        const answer = document.getElementById("day-input").value.trim();
+        const thankYou = document.getElementById("thank-you");
+        const submitButton = document.getElementById("submit-button");
+
+        if (!answer) {
+          thankYou.textContent = "Please type an answer before submitting.";
+          return;
+        }
+
+        if (!supabaseConfigured) {
+          thankYou.textContent = "Connect Supabase first. Follow the setup steps in README.md.";
+          return;
+        }
+
+        if (!supabaseClient) {
+          thankYou.textContent =
+            "The Supabase library did not load. Check your internet connection and refresh.";
+          return;
+        }
+
+        submitButton.disabled = true;
+        thankYou.textContent = "Saving your check-in…";
+
+        try {
+          const { error: saveError } = await supabaseClient
+            .from("check_ins")
+            .insert({ person: currentPerson, mood: currentMood, answer });
+
+          if (saveError) {
+            throw saveError;
+          }
+
+          thankYou.textContent = "Thanks for sharing. Your check-in has been saved.";
+          try {
+            await showOtherPersonCheckIn();
+          } catch (error) {
+            thankYou.textContent =
+              "Your check-in was saved, but the other person's check-in could not be loaded: " +
+              error.message;
+          }
+        } catch (error) {
+          thankYou.textContent = "Could not save your check-in: " + error.message;
+        } finally {
+          submitButton.disabled = false;
+        }
+      }
+
+      async function showOtherPersonCheckIn() {
+        const otherPerson = currentPerson === "Emily" ? "Evan" : "Emily";
+        const { data, error } = await supabaseClient
+          .from("check_ins")
+          .select("person, mood, answer, created_at")
+          .eq("person", otherPerson)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          throw error;
+        }
+
+        const section = document.getElementById("other-check-in");
+        document.getElementById("other-check-in-heading").textContent =
+          otherPerson + "’s latest check-in";
+
+        if (!data) {
+          document.getElementById("other-check-in-mood").textContent =
+            otherPerson + " has not submitted a check-in yet.";
+          document.getElementById("other-check-in-answer").textContent = "";
+          document.getElementById("other-check-in-date").textContent = "";
+        } else {
+          document.getElementById("other-check-in-mood").textContent =
+            "Mood: " + (data.mood === "good" ? "Good" : "Bad");
+          document.getElementById("other-check-in-answer").textContent =
+            "Answer: " + data.answer;
+          document.getElementById("other-check-in-date").textContent =
+            "Submitted: " + new Date(data.created_at).toLocaleString();
+        }
+
+        section.style.display = "block";
+      }
+    </script>
   </body>
 </html>
