@@ -151,8 +151,12 @@
       }
 
       #word-step fieldset {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+        display: flex;
+        width: 100%;
+        min-width: 0;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
         gap: 10px;
         margin: 0 0 20px;
         padding: 0;
@@ -160,19 +164,21 @@
       }
 
       #word-step legend {
-        grid-column: 1 / -1;
-        width: 100%;
+        flex: 1 0 100%;
         margin: 0 0 14px;
         color: var(--ink);
         font-size: 1.12rem;
         font-weight: 650;
+        text-align: center;
       }
 
       .word-option {
         position: relative;
-        display: grid;
+        display: flex;
+        flex: 0 1 100px;
         min-height: 46px;
-        place-items: center;
+        align-items: center;
+        justify-content: center;
         border: 1px solid var(--border);
         border-radius: 12px;
         background: #fbfcf8;
@@ -192,6 +198,11 @@
         width: 1px;
         height: 1px;
         opacity: 0;
+      }
+
+      .word-option:focus-within {
+        outline: 3px solid #a7c9a8;
+        outline-offset: 3px;
       }
 
       #mood-options legend {
@@ -306,6 +317,26 @@
         background: var(--soft);
         color: var(--accent-dark);
         font-weight: 700;
+      }
+
+      #other-check-in-word {
+        padding: 13px 16px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #f6f9f3;
+        color: var(--ink);
+        text-align: center;
+      }
+
+      #selected-word-summary {
+        margin: 0 0 22px;
+        padding: 13px 16px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #f6f9f3;
+        color: var(--accent-dark);
+        font-weight: 650;
+        text-align: center;
       }
 
       #other-check-in-message {
@@ -427,6 +458,7 @@
           <button type="button" onclick="continueToMessage()">Continue</button>
         </div>
         <div id="message-step">
+          <p id="selected-word-summary" aria-live="polite"></p>
           <label id="message-question" for="message-input"></label>
           <textarea id="message-input" placeholder="Write a little message (optional)"></textarea>
           <div class="poppo-controls">
@@ -442,6 +474,7 @@
         <h2 id="other-check-in-heading"></h2>
         <p id="other-check-in-mood"></p>
         <p id="other-check-in-answer"></p>
+        <p id="other-check-in-word"></p>
         <p id="other-check-in-message"></p>
         <p id="other-check-in-date"></p>
       </section>
@@ -480,6 +513,7 @@
         document.getElementById("other-check-in-mood").textContent =
           "No check-in from them in the past 12 hours.";
         document.getElementById("other-check-in-answer").textContent = "";
+        document.getElementById("other-check-in-word").textContent = "";
         document.getElementById("other-check-in-message").textContent = "";
         document.getElementById("other-check-in-date").textContent = "";
         otherCheckInExpiryTimer = null;
@@ -594,6 +628,8 @@
         }
 
         currentWordOfDay = selectedWord.value;
+        document.getElementById("selected-word-summary").textContent =
+          "Your word of the day is: " + currentWordOfDay;
         thankYou.textContent = "";
         document.getElementById("word-step").style.display = "none";
         document.getElementById("message-step").style.display = "block";
@@ -689,6 +725,7 @@
           document.getElementById("other-check-in-mood").textContent =
             "No check-in from them in the past 12 hours.";
           document.getElementById("other-check-in-answer").textContent = "";
+          document.getElementById("other-check-in-word").textContent = "";
           document.getElementById("other-check-in-message").textContent = "";
           document.getElementById("other-check-in-date").textContent = "";
         } else {
@@ -698,15 +735,17 @@
               : "Mood: " + data.mood;
           document.getElementById("other-check-in-answer").textContent =
             "Answer: " + data.answer;
+          document.getElementById("other-check-in-word").textContent =
+            "Which do you resonate most with today? " +
+            data.person +
+            "’s word of the day is: " +
+            (data.word_of_day || "No word was selected.");
           const messageLines = [];
           if (data.message) {
             messageLines.push("Message for you: " + data.message);
           }
           if (data.poppo_count > 0) {
             messageLines.push(data.person + " sent you " + data.poppo_count + " Poppo!");
-          }
-          if (data.word_of_day) {
-            messageLines.push(data.person + "’s word of the day is: " + data.word_of_day);
           }
           document.getElementById("other-check-in-message").textContent =
             messageLines.length > 0 ? messageLines.join("\n") : "No extra message this time.";
