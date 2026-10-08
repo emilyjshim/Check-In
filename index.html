@@ -5,32 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My GitHub Website</title>
     <style>
+      :root {
+        color-scheme: light;
+        --ink: #20392e;
+        --muted: #687b70;
+        --accent: #356b4b;
+        --accent-dark: #28543a;
+        --surface: #fffefa;
+        --page: #eef3eb;
+        --soft: #e1ecdf;
+        --border: #d8e3d5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        font-family: Arial, sans-serif;
-        background-color: #f0f0f0;
+        min-height: 100vh;
+        margin: 0;
+        padding: 48px 20px;
+        background:
+          radial-gradient(ellipse at top left, #dce9d9 0, transparent 42%),
+          var(--page);
+        color: var(--ink);
+        font-family: "Segoe UI", Arial, sans-serif;
         text-align: center;
-        padding: 50px;
       }
+
+      main {
+        width: min(100%, 620px);
+        margin: 0 auto;
+      }
+
+      header {
+        margin: 0 auto 28px;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
       h1 {
-        color: #333;
+        margin: 0;
+        color: var(--ink);
+        font-size: clamp(2rem, 6vw, 2.8rem);
+        letter-spacing: -0.04em;
       }
+
       p,
       label {
-        color: #666;
+        color: var(--muted);
       }
+
+      header > p:last-child {
+        margin: 12px 0 0;
+        font-size: 1.05rem;
+      }
+
+      #person-choice,
+      #mood-options,
+      #follow-up,
+      #other-check-in,
+      #response {
+        margin: 16px 0;
+        padding: 26px;
+        border: 1px solid rgba(216, 227, 213, 0.9);
+        border-radius: 20px;
+        background: var(--surface);
+        box-shadow: 0 12px 36px rgba(38, 75, 49, 0.08);
+      }
+
+      #person-choice > p,
+      #mood-options legend {
+        margin: 0 0 16px;
+        color: var(--ink);
+        font-size: 1.12rem;
+        font-weight: 650;
+      }
+
       button {
-        background-color: #4CAF50;
+        min-height: 44px;
+        padding: 11px 22px;
+        border: 0;
+        border-radius: 12px;
+        background-color: var(--accent);
         color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
+        font: inherit;
+        font-weight: 650;
         cursor: pointer;
-        margin: 5px;
+        transition: background-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
       }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        background-color: var(--accent-dark);
+        box-shadow: 0 5px 14px rgba(40, 84, 58, 0.2);
+      }
+
+      button:focus-visible,
+      input:focus-visible,
+      textarea:focus-visible {
+        outline: 3px solid #a7c9a8;
+        outline-offset: 3px;
+      }
+
       button:disabled {
         cursor: wait;
         opacity: 0.7;
       }
+
       #start-button,
       #mood-options,
       #response,
@@ -38,77 +127,245 @@
       #other-check-in {
         display: none;
       }
+
+      #start-button {
+        margin: 8px 0;
+      }
+
       #mood-options fieldset {
         border: 0;
         margin: 0;
         padding: 0;
       }
+
+      #mood-options legend {
+        width: 100%;
+      }
+
       .mood-scale {
         display: flex;
         justify-content: center;
-        gap: 12px;
-        margin: 16px 0;
+        gap: 10px;
+        margin: 20px 0 4px;
       }
+
       .mood-scale label {
         display: grid;
-        justify-items: center;
-        gap: 6px;
+        width: 54px;
+        height: 54px;
+        place-items: center;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: #fbfcf8;
+        color: var(--ink);
+        font-weight: 700;
         cursor: pointer;
+        transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
       }
+
+      .mood-scale label:has(input:checked) {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+        background: var(--soft);
+        color: var(--accent-dark);
+      }
+
       .mood-scale input {
-        accent-color: #4CAF50;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
       }
+
+      #response {
+        margin-bottom: 16px;
+        color: var(--accent-dark);
+        font-size: 1.05rem;
+        font-weight: 650;
+      }
+
+      #follow-up {
+        text-align: left;
+      }
+
+      #follow-up label {
+        display: block;
+        margin: 0 0 8px;
+        color: var(--ink);
+        font-weight: 650;
+      }
+
       textarea {
         display: block;
         width: 100%;
-        max-width: 400px;
-        min-height: 80px;
-        margin: 10px auto;
-        padding: 10px;
-        box-sizing: border-box;
+        min-height: 100px;
+        margin: 0 0 20px;
+        padding: 13px 14px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #fbfcf8;
+        color: var(--ink);
+        font: inherit;
+        line-height: 1.5;
+        resize: vertical;
+      }
+
+      textarea::placeholder {
+        color: #8b978d;
+      }
+
+      #follow-up button {
+        width: 100%;
+      }
+
+      #thank-you {
+        margin: 14px 0 0;
+        text-align: center;
+      }
+
+      #other-check-in {
+        text-align: left;
+      }
+
+      #other-check-in h2 {
+        margin: 0 0 18px;
+        color: var(--ink);
+        font-size: 1.3rem;
+      }
+
+      #other-check-in p {
+        margin: 10px 0;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+
+      #other-check-in-mood {
+        display: inline-block;
+        padding: 6px 11px;
+        border-radius: 999px;
+        background: var(--soft);
+        color: var(--accent-dark);
+        font-weight: 700;
+      }
+
+      #other-check-in-message {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-left: 3px solid #78a47f;
+        border-radius: 0 12px 12px 0;
+        background: #f3f7ef;
+        white-space: pre-line;
+      }
+
+      #other-check-in-date {
+        margin-top: 18px;
+        font-size: 0.86rem;
+      }
+
+      .poppo-controls {
+        margin: 4px 0 20px;
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: #f3f7ef;
+        text-align: center;
+      }
+
+      .poppo-controls p {
+        margin: 0 0 10px;
+        color: var(--ink);
+        font-weight: 650;
+      }
+
+      #poppo-button {
+        width: auto;
+        min-width: 130px;
+        background: #557c43;
+      }
+
+      #poppo-status {
+        min-height: 1.5em;
+        margin: 10px 0 0;
+        color: var(--accent-dark);
+        font-size: 0.93rem;
+        font-weight: 650;
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 30px 14px;
+        }
+
+        #person-choice,
+        #mood-options,
+        #follow-up,
+        #other-check-in,
+        #response {
+          padding: 21px 17px;
+          border-radius: 17px;
+        }
+
+        .mood-scale {
+          gap: 7px;
+        }
+
+        .mood-scale label {
+          width: 48px;
+          height: 48px;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Welcome to the check-in!</h1>
-    <p>Tell me how your day has been.</p>
+    <main>
+      <header>
+        <p class="eyebrow">A little moment for you</p>
+        <h1>Daily check-in</h1>
+        <p>Tell me how your day has been.</p>
+      </header>
 
-    <section id="person-choice">
-      <p>Who is filling out the check-in?</p>
-      <button onclick="choosePerson('Emily')">Emily</button>
-      <button onclick="choosePerson('Evan')">Evan</button>
-    </section>
+      <section id="person-choice">
+        <p>Who is filling out the check-in?</p>
+        <button onclick="choosePerson('Emily')">Emily</button>
+        <button onclick="choosePerson('Evan')">Evan</button>
+      </section>
 
-    <p id="selected-person" aria-live="polite"></p>
-    <button id="start-button" onclick="showMoodOptions()">Start check-in</button>
-    <div id="mood-options">
-      <fieldset>
-        <legend>On a scale of 1 to 5, how is your mood? (5 is the best)</legend>
-        <div class="mood-scale">
-          <label><input type="radio" name="mood-rating" value="1" onchange="showResponse(this.value)">1</label>
-          <label><input type="radio" name="mood-rating" value="2" onchange="showResponse(this.value)">2</label>
-          <label><input type="radio" name="mood-rating" value="3" onchange="showResponse(this.value)">3</label>
-          <label><input type="radio" name="mood-rating" value="4" onchange="showResponse(this.value)">4</label>
-          <label><input type="radio" name="mood-rating" value="5" onchange="showResponse(this.value)">5</label>
+      <p id="selected-person" aria-live="polite"></p>
+      <button id="start-button" onclick="showMoodOptions()">Start check-in</button>
+      <div id="mood-options">
+        <fieldset>
+          <legend>On a scale of 1 to 5, how is your mood? (5 is the best)</legend>
+          <div class="mood-scale">
+            <label><input type="radio" name="mood-rating" value="1" onchange="showResponse(this.value)">1</label>
+            <label><input type="radio" name="mood-rating" value="2" onchange="showResponse(this.value)">2</label>
+            <label><input type="radio" name="mood-rating" value="3" onchange="showResponse(this.value)">3</label>
+            <label><input type="radio" name="mood-rating" value="4" onchange="showResponse(this.value)">4</label>
+            <label><input type="radio" name="mood-rating" value="5" onchange="showResponse(this.value)">5</label>
+          </div>
+        </fieldset>
+      </div>
+      <p id="response" aria-live="polite"></p>
+      <div id="follow-up">
+        <label id="follow-up-question" for="day-input"></label>
+        <textarea id="day-input" placeholder="Type your answer here"></textarea>
+        <label id="message-question" for="message-input"></label>
+        <textarea id="message-input" placeholder="Write a little message (optional)"></textarea>
+        <div class="poppo-controls">
+          <p id="poppo-instruction"></p>
+          <button id="poppo-button" type="button" onclick="sendPoppo()">Poppo 💚</button>
+          <p id="poppo-status" aria-live="polite"></p>
         </div>
-      </fieldset>
-    </div>
-    <p id="response" aria-live="polite"></p>
-    <div id="follow-up">
-      <label id="follow-up-question" for="day-input"></label>
-      <textarea id="day-input" placeholder="Type your answer here"></textarea>
-      <label id="message-question" for="message-input"></label>
-      <textarea id="message-input" placeholder="Write a little message (optional)"></textarea>
-      <button id="submit-button" onclick="submitAnswer()">Submit</button>
-      <p id="thank-you" aria-live="polite"></p>
-    </div>
-    <section id="other-check-in" aria-live="polite">
-      <h2 id="other-check-in-heading"></h2>
-      <p id="other-check-in-mood"></p>
-      <p id="other-check-in-answer"></p>
-      <p id="other-check-in-message"></p>
-      <p id="other-check-in-date"></p>
-    </section>
+        <button id="submit-button" onclick="submitAnswer()">Submit check-in</button>
+        <p id="thank-you" aria-live="polite"></p>
+      </div>
+      <section id="other-check-in" aria-live="polite">
+        <h2 id="other-check-in-heading"></h2>
+        <p id="other-check-in-mood"></p>
+        <p id="other-check-in-answer"></p>
+        <p id="other-check-in-message"></p>
+        <p id="other-check-in-date"></p>
+      </section>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -127,6 +384,7 @@
       let currentPerson = "";
       let currentMood = "";
       let currentRating = 0;
+      let poppoCount = 0;
       let otherCheckInExpiryTimer = null;
 
       function clearOtherCheckInExpiryTimer() {
@@ -190,12 +448,22 @@
 
         document.getElementById("message-question").textContent =
           "Message for " + (currentPerson === "Emily" ? "Evan" : "Emily") + " (optional):";
+        poppoCount = 0;
+        document.getElementById("poppo-instruction").textContent = "Send 0 Poppo";
+        document.getElementById("poppo-status").textContent = "";
         response.style.display = "block";
         document.getElementById("follow-up").style.display = "block";
         document.getElementById("day-input").value = "";
         document.getElementById("message-input").value = "";
         document.getElementById("other-check-in").style.display = "none";
         thankYou.textContent = "";
+      }
+
+      function sendPoppo() {
+        poppoCount += 1;
+        const countText = poppoCount + " Poppo";
+        document.getElementById("poppo-instruction").textContent = "Send " + countText;
+        document.getElementById("poppo-status").textContent = "Sent " + countText + "!";
       }
 
       async function submitAnswer() {
@@ -231,7 +499,8 @@
               mood: currentMood,
               rating: currentRating,
               answer,
-              message
+              message,
+              poppo_count: poppoCount
             });
 
           if (saveError) {
@@ -257,7 +526,7 @@
         const otherPerson = currentPerson === "Emily" ? "Evan" : "Emily";
         const { data, error } = await supabaseClient
           .from("check_ins")
-          .select("person, mood, rating, answer, message, created_at")
+          .select("person, mood, rating, answer, message, poppo_count, created_at")
           .eq("person", otherPerson)
           .gte(
             "created_at",
@@ -289,9 +558,15 @@
               : "Mood: " + data.mood;
           document.getElementById("other-check-in-answer").textContent =
             "Answer: " + data.answer;
-          document.getElementById("other-check-in-message").textContent = data.message
-            ? "Message for you: " + data.message
-            : "No extra message this time.";
+          const messageLines = [];
+          if (data.message) {
+            messageLines.push("Message for you: " + data.message);
+          }
+          if (data.poppo_count > 0) {
+            messageLines.push(data.person + " sent you " + data.poppo_count + " Poppo!");
+          }
+          document.getElementById("other-check-in-message").textContent =
+            messageLines.length > 0 ? messageLines.join("\n") : "No extra message this time.";
           document.getElementById("other-check-in-date").textContent =
             "Submitted: " + new Date(data.created_at).toLocaleString();
           const expiresIn =

@@ -5,6 +5,7 @@ create table if not exists public.check_ins (
   rating smallint check (rating between 1 and 5),
   answer text not null,
   message text not null default '',
+  poppo_count integer not null default 0 check (poppo_count >= 0),
   created_at timestamptz not null default now()
 );
 
@@ -13,6 +14,9 @@ alter table public.check_ins
 
 alter table public.check_ins
   add column if not exists rating smallint check (rating between 1 and 5);
+
+alter table public.check_ins
+  add column if not exists poppo_count integer not null default 0 check (poppo_count >= 0);
 
 alter table public.check_ins
   drop constraint if exists check_ins_mood_check;
