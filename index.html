@@ -172,7 +172,7 @@
         text-align: center;
       }
 
-      .word-option {
+      #word-step .word-option {
         position: relative;
         display: flex;
         flex: 0 1 100px;
@@ -187,20 +187,20 @@
         cursor: pointer;
       }
 
-      .word-option:has(input:checked) {
+      #word-step .word-option:has(input:checked) {
         border-color: var(--accent);
         background: var(--soft);
         color: var(--accent-dark);
       }
 
-      .word-option input {
+      #word-step .word-option input {
         position: absolute;
         width: 1px;
         height: 1px;
         opacity: 0;
       }
 
-      .word-option:focus-within {
+      #word-step .word-option:focus-within {
         outline: 3px solid #a7c9a8;
         outline-offset: 3px;
       }
