@@ -529,6 +529,14 @@
         Sternie: new Audio("audio/sternie.mp3"),
         Eyes: new Audio("audio/eyes.mp3")
       };
+      const wordAudioGains = {
+        Beso: 2,
+        Poppo: 2.2,
+        Sternie: 1.5,
+        Eyes: 1.5
+      };
+      const audioGainNodes = new WeakMap();
+      let audioContext = null;
       let currentPerson = "";
       let currentMood = "";
       let currentRating = 0;
@@ -658,7 +666,7 @@
         document.getElementById("word-step").style.display = "block";
       }
 
-      function playWordAudio(word) {
+      async function playWordAudio(word) {
         const audio = wordAudio[word];
         const status = document.getElementById("word-audio-status");
 
@@ -679,9 +687,30 @@
 
         currentAudio = audio;
         audio.currentTime = 0;
-        audio.play().catch(() => {
-          status.textContent = "Couldn't play that audio. Check the MP3 file and try again.";
-        });
+
+        try {
+          const gain = wordAudioGains[word];
+          if (gain && window.AudioContext) {
+            audioContext = audioContext || new AudioContext();
+            let gainNode = audioGainNodes.get(audio);
+
+            if (!gainNode) {
+              const source = audioContext.createMediaElementSource(audio);
+              gainNode = audioContext.createGain();
+              source.connect(gainNode);
+              gainNode.connect(audioContext.destination);
+              audioGainNodes.set(audio, gainNode);
+            }
+
+            gainNode.gain.value = gain;
+            await audioContext.resume();
+          }
+
+          await audio.play();
+        } catch (error) {
+          status.textContent =
+            "Couldn't play that audio. Check the MP3 file and try again: " + error.message;
+        }
       }
 
       function continueToMessage() {
